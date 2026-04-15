@@ -52,7 +52,7 @@ if st.button("Generate Recipes 🪄", type="primary"):
         st.error("Your pantry is empty! Go shopping.")
     else:
         with st.spinner("Cooking up ideas..."):
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             prompt = f"I have these ingredients: {', '.join(pantry_list)}. I want a {vibe} {meal}. Suggest 3 distinct recipes I can make. Give a 1-sentence description and a 1-5 star effort rating for each."
             response = model.generate_content(prompt)
             st.markdown(response.text)
