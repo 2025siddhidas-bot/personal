@@ -99,10 +99,16 @@ def generate_new_recipe():
     
     (Internal generation seed: {random.randint(1, 100000)} - ensure this is a unique and creative idea)
     """
-    response = model.generate_content(prompt)
-    st.session_state.recipe = response.text
-
-st.divider()
+    
+    # The new "Crash Proof" block
+    try:
+        response = model.generate_content(prompt)
+        st.session_state.recipe = response.text
+    except Exception as e:
+        if "ResourceExhausted" in str(e) or "429" in str(e):
+            st.error("⏳ Whoa there, Chef! We hit the free AI speed limit. Please wait about 60 seconds and try again.")
+        else:
+            st.error(f"An unexpected error occurred: {e}")
 
 # 5. Buttons and Display
 if st.button("Generate Recipe 🪄", type="primary"):
