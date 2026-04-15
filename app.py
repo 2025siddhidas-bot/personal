@@ -105,10 +105,11 @@ def generate_new_recipe():
         response = model.generate_content(prompt)
         st.session_state.recipe = response.text
     except Exception as e:
-        if "ResourceExhausted" in str(e) or "429" in str(e):
-            st.error("⏳ Whoa there, Chef! We hit the free AI speed limit. Please wait about 60 seconds and try again.")
+        error_msg = str(e)
+        if "ResourceExhausted" in error_msg or "429" in error_msg:
+            st.error(f"⏳ Whoa there, Chef! We hit an AI limit. Here is the exact error from Google so we know if it's per-minute or per-day:\n\n{error_msg}")
         else:
-            st.error(f"An unexpected error occurred: {e}")
+            st.error(f"An unexpected error occurred: {error_msg}")
 
 # 5. Buttons and Display
 if st.button("Generate Recipe 🪄", type="primary"):
