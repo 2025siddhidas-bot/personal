@@ -27,7 +27,7 @@ def get_pantry_items():
     for page in data.get("results", []):
         # NOTE: If your main column is named "Ingredient" instead of "Name", change "Name" below!
         try:
-            name = page["properties"]["Name"]["title"][0]["text"]["content"]
+            name = page["properties"]["Ingredient"]["title"][0]["text"]["content"]
             ingredients.append(name)
         except IndexError:
             continue
