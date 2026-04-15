@@ -10,6 +10,31 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 st.set_page_config(page_title="My AI Chef", page_icon="👨‍🍳")
 st.title("👨‍🍳 The Backpack AI Chef")
+# Custom CSS Styling
+st.markdown("""
+<style>
+    /* Change the main background color to a soft cream */
+    .stApp {
+        background-color: #FDFBF7;
+    }
+    
+    /* Make the Generate button pop */
+    .stButton>button {
+        background-color: #FF4B4B;
+        color: white;
+        border-radius: 10px;
+        border: none;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    
+    /* Add a little hover effect to the button */
+    .stButton>button:hover {
+        background-color: #FF2B2B;
+        transform: scale(1.02);
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # 2. Get available pantry items from Notion
 def get_pantry_items():
