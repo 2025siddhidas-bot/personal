@@ -26,7 +26,6 @@ def get_pantry_items():
     ingredients = []
     for page in data.get("results", []):
         try:
-            # Using "Ingredient" based on your previous fix!
             name = page["properties"]["Ingredient"]["title"][0]["text"]["content"]
             ingredients.append(name)
         except (IndexError, KeyError):
@@ -37,9 +36,21 @@ with st.spinner("Scanning your pantry..."):
     pantry_list = get_pantry_items()
 
 st.success(f"Found {len(pantry_list)} available ingredients!")
-st.write(", ".join(pantry_list))
+with st.expander("👀 See full pantry list"):
+    st.write(", ".join(pantry_list))
 
-# 3. User Inputs
+st.divider()
+
+# 3. User Inputs (Now with Cravings!)
+st.subheader("What are you craving?")
+
+# This creates a searchable dropdown of your pantry items
+preferred_ingredients = st.multiselect(
+    "Select specific ingredients you MUST have in this recipe (optional):",
+    options=pantry_list,
+    placeholder="e.g., Chicken Drumsticks, Garlic..."
+)
+
 col1, col2 = st.columns(2)
 with col1:
     meal = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner", "Snack"])
@@ -49,9 +60,17 @@ with col2:
 # 4. Generate AI Recipe Function
 def generate_new_recipe():
     model = genai.GenerativeModel('gemini-2.5-flash')
-    # We add a random number to the prompt so the AI doesn't just repeat the exact same recipe
+    
+    # If you selected specific ingredients, we boldly command the AI to use them.
+    craving_instruction = ""
+    if len(preferred_ingredients) > 0:
+        craving_instruction = f"CRITICAL: You MUST prominently feature these specific ingredients: {', '.join(preferred_ingredients)}."
+        
     prompt = f"""
     I have these ingredients available: {', '.join(pantry_list)}. 
+    
+    {craving_instruction}
+    
     I want a {vibe} {meal}. 
     
     Provide EXACTLY ONE recipe. Format it clearly with these 3 distinct sections:
@@ -69,6 +88,8 @@ def generate_new_recipe():
     """
     response = model.generate_content(prompt)
     st.session_state.recipe = response.text
+
+st.divider()
 
 # 5. Buttons and Display
 if st.button("Generate Recipe 🪄", type="primary"):
