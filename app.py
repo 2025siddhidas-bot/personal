@@ -8,6 +8,7 @@ NOTION_TOKEN = st.secrets["NOTION_TOKEN"]
 DATABASE_ID = st.secrets["DATABASE_ID"]
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
+st.set_page_config(page_title="My AI Chef", page_icon="👨‍🍳")
 st.title("👨‍🍳 The Backpack AI Chef")
 
 # 2. Get available pantry items from Notion
@@ -41,37 +42,49 @@ with st.expander("👀 See full pantry list"):
 
 st.divider()
 
-# 3. User Inputs (Now with Cravings!)
-st.subheader("What are you craving?")
-
-# This creates a searchable dropdown of your pantry items
+# 3. User Inputs & Constraints
+st.subheader("What are we cooking?")
 preferred_ingredients = st.multiselect(
-    "Select specific ingredients you MUST have in this recipe (optional):",
+    "Any specific cravings? (Optional)",
     options=pantry_list,
-    placeholder="e.g., Chicken Drumsticks, Garlic..."
+    placeholder="e.g., Chicken, Rice..."
 )
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
     meal = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner", "Snack"])
 with col2:
     vibe = st.selectbox("Vibe", ["Savory", "Sweet", "Comforting", "Spicy"])
+with col3:
+    difficulty = st.selectbox("Effort Level", ["Super Easy (5-10 mins)", "Moderate (30 mins)", "Elaborate (1 hr+)"])
+
+col4, col5 = st.columns(2)
+with col4:
+    servings = st.number_input("Servings", min_value=1, max_value=10, value=1)
+with col5:
+    extra_notes = st.text_input("Extra Notes (Optional)", placeholder="e.g., Make it extra spicy, no dairy...")
 
 # 4. Generate AI Recipe Function
 def generate_new_recipe():
     model = genai.GenerativeModel('gemini-2.5-flash')
     
-    # If you selected specific ingredients, we boldly command the AI to use them.
     craving_instruction = ""
     if len(preferred_ingredients) > 0:
-        craving_instruction = f"CRITICAL: You MUST prominently feature these specific ingredients: {', '.join(preferred_ingredients)}."
+        craving_instruction = f"- CRITICAL FOCUS: Must prominently feature these ingredients: {', '.join(preferred_ingredients)}."
         
     prompt = f"""
     I have these ingredients available: {', '.join(pantry_list)}. 
     
+    Recipe Requirements:
+    - Meal: {vibe} {meal}
+    - Time/Effort Limit: {difficulty}
+    - Servings: {servings} portion(s)
+    - Additional user notes: {extra_notes if extra_notes else 'None'}
     {craving_instruction}
     
-    I want a {vibe} {meal}. 
+    STRICT BACKEND CONSTRAINTS:
+    1. ONE POT RULE: I only have ONE pot/pan to cook with. All instructions and preparation MUST reflect using a single vessel. Keep it realistic to this constraint.
+    2. CULTURAL PREFERENCE: I am Indian. Please lean heavily into Indian flavor profiles, spices, and cooking styles where appropriate given my ingredients.
     
     Provide EXACTLY ONE recipe. Format it clearly with these 3 distinct sections:
     
@@ -79,12 +92,12 @@ def generate_new_recipe():
     (1-2 sentences describing the dish)
     
     ### 2. Ingredients
-    (Include the exact estimated quantities needed for the dish based on standard portions)
+    (Include exact estimated quantities based on {servings} servings)
     
     ### 3. Detailed Instructions
-    (Step-by-step cooking guide)
+    (Step-by-step cooking guide ensuring the one-pot rule is strictly followed)
     
-    (Internal generation seed: {random.randint(1, 10000)} - ensure this is a unique and creative idea)
+    (Internal generation seed: {random.randint(1, 100000)} - ensure this is a unique and creative idea)
     """
     response = model.generate_content(prompt)
     st.session_state.recipe = response.text
@@ -99,7 +112,6 @@ if st.button("Generate Recipe 🪄", type="primary"):
         with st.spinner("Cooking up a recipe..."):
             generate_new_recipe()
 
-# If a recipe exists in the app's memory, display it and show the regenerate button
 if "recipe" in st.session_state:
     st.markdown(st.session_state.recipe)
     
